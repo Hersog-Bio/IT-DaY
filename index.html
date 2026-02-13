@@ -1,29 +1,16 @@
-<html lang="ru"><head>
+<!DOCTYPE html>
+<html lang="ru">
+<head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IT Day 💖</title>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <title>3D Heart из 0 и 1 ❤️</title>
     <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            background-color: black;
-            font-family: 'Courier New', monospace;
-        }
+        body { margin: 0; overflow: hidden; background-color: black; }
         #info {
-            position: absolute;
-            bottom: 20px;
-            left: 0;
-            width: 100%;
-            text-align: center;
-            color: #ff3366;
-            text-shadow: 0 0 10px #ff3366;
-            font-size: 24px;
-            pointer-events: none;
-            z-index: 10;
-            letter-spacing: 4px;
-            animation: pulse 2s infinite;
+            position: absolute; bottom: 20px; left: 0; width: 100%;
+            text-align: center; color: #ff3366; text-shadow: 0 0 10px #ff3366;
+            font-family: 'Courier New', monospace; font-size: 24px;
+            pointer-events: none; z-index: 10; animation: pulse 2s infinite;
         }
         @keyframes pulse {
             0% { opacity: 0.8; text-shadow: 0 0 10px #ff3366; }
@@ -31,171 +18,164 @@
             100% { opacity: 0.8; text-shadow: 0 0 10px #ff3366; }
         }
     </style>
+    <!-- Подключаем Three.js старым способом (глобальная переменная THREE) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
-<div id="info">С 14 февраля ❤️ айтишника</div>
+    <div id="info">С 14 февраля ❤️ программиста</div>
 
-<script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@0.128.0/build/three.module.js"
+    <script>
+        // --- Инициализация сцены, камеры, рендерера ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050510);
+
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(0, 0, 25);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        document.body.appendChild(renderer.domElement);
+
+        // --- Создаём текстуры для символов 0 и 1 с помощью Canvas ---
+        function createSymbolTexture(symbol, color) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 64;
+            canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, 64, 64);
+            ctx.font = 'bold 48px "Courier New", monospace';
+            ctx.fillStyle = color;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(symbol, 32, 32);
+            // Добавляем свечение
+            ctx.shadowColor = color;
+            ctx.shadowBlur = 10;
+            ctx.fillText(symbol, 32, 32);
+            return new THREE.CanvasTexture(canvas);
         }
-    }
-</script>
 
-<script type="module">
-    import * as THREE from 'three';
-    import { OrbitControls } from 'https://unpkg.com/three@0.128.0/examples/jsm/controls/OrbitControls.js';
+        const tex0 = createSymbolTexture('0', '#ff5577');
+        const tex1 = createSymbolTexture('1', '#ff3366');
 
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x050510);
-
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.set(0, 0, 25);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    document.body.appendChild(renderer.domElement);
-    
-    function createSymbolTexture(symbol, color = '#ff3366') {
-        const canvas = document.createElement('canvas');
-        canvas.width = 64;
-        canvas.height = 64;
-        const ctx = canvas.getContext('2d');
-
-        ctx.clearRect(0, 0, 64, 64);
-
-        ctx.font = 'bold 48px "Courier New", monospace';
-        ctx.fillStyle = color;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(symbol, 32, 32);
-
-        ctx.shadowColor = color;
-        ctx.shadowBlur = 10;
-        ctx.fillText(symbol, 32, 32);
-
-        const texture = new THREE.CanvasTexture(canvas);
-        return texture;
-    }
-
-    const tex0 = createSymbolTexture('0', '#ff5577');
-    const tex1 = createSymbolTexture('1', '#ff3366');
-
-    const positions0 = [];
-    const positions1 = [];
-
-    const scale = 0.5;
-    const thickness = 2.5;
-    const stepsT = 60;
-    const stepsZ = 12;
-
-    for (let i = 0; i <= stepsT; i++) {
-        const t = (i / stepsT) * Math.PI * 2;
-
-        const x = 16 * Math.pow(Math.sin(t), 3);
-        const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
-
-        const variation = 0.2;
-
-        for (let j = 0; j < stepsZ; j++) {
-            const z = (j / (stepsZ - 1) - 0.5) * thickness;
-
-            const offX = (Math.random() - 0.5) * variation;
-            const offY = (Math.random() - 0.5) * variation;
-            const offZ = (Math.random() - 0.5) * variation;
-
-            const px = (x + offX) * scale;
-            const py = (y + offY) * scale;
-            const pz = (z + offZ) * scale;
-
-            if (Math.random() > 0.5) {
-                positions0.push(px, py, pz);
-            } else {
-                positions1.push(px, py, pz);
+        // --- Генерация позиций для сердечка ---
+        const positions0 = [];
+        const positions1 = [];
+        
+        const scale = 0.5;
+        const thickness = 2.5;
+        const stepsT = 60;
+        const stepsZ = 12;
+        
+        for (let i = 0; i <= stepsT; i++) {
+            const t = (i / stepsT) * Math.PI * 2;
+            
+            // Формула сердца
+            const x = 16 * Math.pow(Math.sin(t), 3);
+            const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+            
+            const variation = 0.2;
+            
+            for (let j = 0; j < stepsZ; j++) {
+                const z = (j / (stepsZ - 1) - 0.5) * thickness;
+                
+                const offX = (Math.random() - 0.5) * variation;
+                const offY = (Math.random() - 0.5) * variation;
+                const offZ = (Math.random() - 0.5) * variation;
+                
+                const px = (x + offX) * scale;
+                const py = (y + offY) * scale;
+                const pz = (z + offZ) * scale;
+                
+                // Случайный выбор символа
+                if (Math.random() > 0.5) {
+                    positions0.push(px, py, pz);
+                } else {
+                    positions1.push(px, py, pz);
+                }
             }
         }
-    }
 
-    function createPointsGeometry(positionsArray) {
-        const geometry = new THREE.BufferGeometry();
-        geometry.setAttribute('position', new THREE.Float32BufferAttribute(positionsArray, 3));
-        return geometry;
-    }
+        // --- Функция для создания геометрии ---
+        function createPointsGeometry(positionsArray) {
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(positionsArray, 3));
+            return geometry;
+        }
 
-    const geom0 = createPointsGeometry(positions0);
-    const geom1 = createPointsGeometry(positions1);
+        const geom0 = createPointsGeometry(positions0);
+        const geom1 = createPointsGeometry(positions1);
 
-    const material0 = new THREE.PointsMaterial({
-        map: tex0,
-        size: 0.9,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-        transparent: true,
-        color: 0xff5577,
-        opacity: 0.9
-    });
+        // --- Материалы для точек ---
+        const material0 = new THREE.PointsMaterial({
+            map: tex0,
+            size: 0.9,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+            transparent: true,
+            color: 0xff5577,
+            opacity: 0.9
+        });
 
-    const material1 = new THREE.PointsMaterial({
-        map: tex1,
-        size: 0.9,
-        blending: THREE.AdditiveBlending,
-        depthWrite: false,
-        transparent: true,
-        color: 0xff3366,
-        opacity: 0.9
-    });
+        const material1 = new THREE.PointsMaterial({
+            map: tex1,
+            size: 0.9,
+            blending: THREE.AdditiveBlending,
+            depthWrite: false,
+            transparent: true,
+            color: 0xff3366,
+            opacity: 0.9
+        });
 
-    const points0 = new THREE.Points(geom0, material0);
-    const points1 = new THREE.Points(geom1, material1);
+        // --- Создаём системы частиц и группу ---
+        const points0 = new THREE.Points(geom0, material0);
+        const points1 = new THREE.Points(geom1, material1);
+        
+        const heartGroup = new THREE.Group();
+        heartGroup.add(points0);
+        heartGroup.add(points1);
+        scene.add(heartGroup);
 
-    const heartGroup = new THREE.Group();
-    heartGroup.add(points0);
-    heartGroup.add(points1);
-    scene.add(heartGroup);
+        // --- Фоновые звёзды ---
+        const starGeometry = new THREE.BufferGeometry();
+        const starCount = 800;
+        const starPositions = new Float32Array(starCount * 3);
+        for (let i = 0; i < starCount; i++) {
+            starPositions[i*3] = (Math.random() - 0.5) * 200;
+            starPositions[i*3+1] = (Math.random() - 0.5) * 200;
+            starPositions[i*3+2] = (Math.random() - 0.5) * 200;
+        }
+        starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+        const starMaterial = new THREE.PointsMaterial({ color: 0x888888, size: 0.2, transparent: true, opacity: 0.6 });
+        const stars = new THREE.Points(starGeometry, starMaterial);
+        scene.add(stars);
 
-    const starGeometry = new THREE.BufferGeometry();
-    const starCount = 800;
-    const starPositions = new Float32Array(starCount * 3);
-    for (let i = 0; i < starCount; i++) {
-        starPositions[i*3] = (Math.random() - 0.5) * 200;
-        starPositions[i*3+1] = (Math.random() - 0.5) * 200;
-        starPositions[i*3+2] = (Math.random() - 0.5) * 200;
-    }
-    starGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-    const starMaterial = new THREE.PointsMaterial({ color: 0x888888, size: 0.2, transparent: true, opacity: 0.6 });
-    const stars = new THREE.Points(starGeometry, starMaterial);
-    scene.add(stars);
+        // --- Анимация ---
+        function animate() {
+            requestAnimationFrame(animate);
 
-    function animate() {
-        requestAnimationFrame(animate);
+            heartGroup.rotation.y += 0.005;
+            heartGroup.rotation.x += 0.001;
+            heartGroup.rotation.z += 0.002;
 
-        heartGroup.rotation.y += 0.005;
-        heartGroup.rotation.x += 0.001;
-        heartGroup.rotation.z += 0.002;
+            stars.rotation.y += 0.0002;
 
-        stars.rotation.y += 0.0002;
+            const time = Date.now() * 0.002;
+            const beat = 1 + Math.sin(time) * 0.02;
+            heartGroup.scale.set(beat, beat, beat);
 
-        const time = Date.now() * 0.002;
-        const beat = 1 + Math.sin(time) * 0.02;
-        heartGroup.scale.set(beat, beat, beat);
+            renderer.render(scene, camera);
+        }
 
-        renderer.render(scene, camera);
-    }
+        animate();
 
-    animate();
-
-    window.addEventListener('resize', onWindowResize, false);
-    function onWindowResize() {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    }
-
-    setTimeout(() => {
-        console.log('Сердце из 0 и 1 готово!');
-    }, 500);
-</script>
-
-<canvas width="1954" height="1317" style="display: block; width: 1954px; height: 1317px;"></canvas></body></html>
+        // --- Обработка изменения размера окна ---
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
+</body>
+</html>
