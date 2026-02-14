@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Heart из 0 и 1 ❤️</title>
+    <title>It valentinka ❤️</title>
     <style>
         body { margin: 0; overflow: hidden; background-color: black; }
         #info {
@@ -18,14 +18,12 @@
             100% { opacity: 0.8; text-shadow: 0 0 10px #ff3366; }
         }
     </style>
-    <!-- Подключаем Three.js старым способом (глобальная переменная THREE) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
-    <div id="info">С 14 февраля ❤️ программиста</div>
+    <div id="info">С 14 февраля ❤️ от программиста</div>
 
     <script>
-        // --- Инициализация сцены, камеры, рендерера ---
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x050510);
 
@@ -37,7 +35,6 @@
         renderer.setPixelRatio(window.devicePixelRatio);
         document.body.appendChild(renderer.domElement);
 
-        // --- Создаём текстуры для символов 0 и 1 с помощью Canvas ---
         function createSymbolTexture(symbol, color) {
             const canvas = document.createElement('canvas');
             canvas.width = 64;
@@ -59,7 +56,6 @@
         const tex0 = createSymbolTexture('0', '#ff5577');
         const tex1 = createSymbolTexture('1', '#ff3366');
 
-        // --- Генерация позиций для сердечка ---
         const positions0 = [];
         const positions1 = [];
         
@@ -71,7 +67,6 @@
         for (let i = 0; i <= stepsT; i++) {
             const t = (i / stepsT) * Math.PI * 2;
             
-            // Формула сердца
             const x = 16 * Math.pow(Math.sin(t), 3);
             const y = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
             
@@ -88,7 +83,6 @@
                 const py = (y + offY) * scale;
                 const pz = (z + offZ) * scale;
                 
-                // Случайный выбор символа
                 if (Math.random() > 0.5) {
                     positions0.push(px, py, pz);
                 } else {
@@ -97,7 +91,6 @@
             }
         }
 
-        // --- Функция для создания геометрии ---
         function createPointsGeometry(positionsArray) {
             const geometry = new THREE.BufferGeometry();
             geometry.setAttribute('position', new THREE.Float32BufferAttribute(positionsArray, 3));
@@ -107,7 +100,6 @@
         const geom0 = createPointsGeometry(positions0);
         const geom1 = createPointsGeometry(positions1);
 
-        // --- Материалы для точек ---
         const material0 = new THREE.PointsMaterial({
             map: tex0,
             size: 0.9,
@@ -128,7 +120,6 @@
             opacity: 0.9
         });
 
-        // --- Создаём системы частиц и группу ---
         const points0 = new THREE.Points(geom0, material0);
         const points1 = new THREE.Points(geom1, material1);
         
@@ -136,8 +127,6 @@
         heartGroup.add(points0);
         heartGroup.add(points1);
         scene.add(heartGroup);
-
-        // --- Фоновые звёзды ---
         const starGeometry = new THREE.BufferGeometry();
         const starCount = 800;
         const starPositions = new Float32Array(starCount * 3);
@@ -151,7 +140,6 @@
         const stars = new THREE.Points(starGeometry, starMaterial);
         scene.add(stars);
 
-        // --- Анимация ---
         function animate() {
             requestAnimationFrame(animate);
 
@@ -169,8 +157,6 @@
         }
 
         animate();
-
-        // --- Обработка изменения размера окна ---
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
